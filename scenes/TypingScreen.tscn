@@ -47,9 +47,39 @@ theme_override_font_sizes/font_size = 36
 
 [node name="Subtitle" type="Label" parent="Margin/Panel/Content"]
 layout_mode = 2
-text = "Type mine(\"coal\"), mine(\"iron\"), or smelt(\"iron\"). Each line runs one tick at a time."
+text = "Main loops when applied. Create files with functions like func mine coal() ... end, then call mine coal() from main."
 horizontal_alignment = 1
 autowrap_mode = 3
+
+[node name="FileBar" type="HBoxContainer" parent="Margin/Panel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FileSelector" type="OptionButton" parent="Margin/Panel/Content/FileBar"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+
+[node name="FileNameEdit" type="LineEdit" parent="Margin/Panel/Content/FileBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "file name"
+
+[node name="NewFileButton" type="Button" parent="Margin/Panel/Content/FileBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "New File"
+
+[node name="RenameFileButton" type="Button" parent="Margin/Panel/Content/FileBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Rename"
+
+[node name="DeleteFileButton" type="Button" parent="Margin/Panel/Content/FileBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Delete"
 
 [node name="EditorFrame" type="PanelContainer" parent="Margin/Panel/Content"]
 custom_minimum_size = Vector2(0, 380)
@@ -68,7 +98,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-placeholder_text = "# Write factory instructions here...\nmine(\"coal\")\nmine(\"coal\")\nmine(\"iron\")\nsmelt(\"iron\")"
+placeholder_text = "# main example:\nmine coal()\nsmelt iron()\n\n# another file example:\nfunc mine coal()\nmine(\"coal\")\nend"
 wrap_mode = 1
 scroll_fit_content_height = false
 minimap_draw = false

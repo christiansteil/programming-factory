@@ -2,179 +2,239 @@ extends RefCounted
 
 const COMMAND_MINE: String = "mine"
 const COMMAND_SMELT: String = "smelt"
+const COMMAND_CALL: String = "call"
 const RESOURCE_COAL: String = "coal"
 const RESOURCE_IRON: String = "iron"
-
-const TOKEN_IDENTIFIER: String = "identifier"
-const TOKEN_STRING: String = "string"
-const TOKEN_LEFT_PAREN: String = "left_paren"
-const TOKEN_RIGHT_PAREN: String = "right_paren"
-const TOKEN_COMMA: String = "comma"
+const MAIN_FILE_NAME: String = "main"
+const FUNCTION_DECLARATION_PREFIX: String = "func "
+const FUNCTION_DECLARATION_ALT_PREFIX: String = "function "
+const FUNCTION_END: String = "end"
+const MAX_CALL_DEPTH: int = 32
 
 static func parse(source_code: String) -> Dictionary:
-	var commands: Array[Dictionary] = []
-	var lines: PackedStringArray = source_code.split("\n")
+	return parse_files({MAIN_FILE_NAME: source_code}, MAIN_FILE_NAME)
 
-	for line_index in range(lines.size()):
-		var source_line: String = String(lines[line_index])
-		var trimmed_line: String = source_line.strip_edges()
-		if trimmed_line == "" or trimmed_line.begins_with("#"):
-			continue
+static func parse_files(program_files: Dictionary, main_file_name: String) -> Dictionary:
+	var parse_result: Dictionary = _parse_all_files(program_files, main_file_name)
+	if not parse_result["is_valid"]:
+		return _error_result(parse_result["error"])
 
-		var token_result: Dictionary = _tokenize_line(source_line, line_index + 1)
-		if not token_result["is_valid"]:
-			return _error_result(token_result["error"])
-
-		var parse_result: Dictionary = _parse_command(token_result["tokens"], line_index + 1)
-		if not parse_result["is_valid"]:
-			return _error_result(parse_result["error"])
-
-		commands.append(parse_result["command"])
+	var compile_result: Dictionary = _compile_main_commands(parse_result["main_commands"], parse_result["functions"])
+	if not compile_result["is_valid"]:
+		return _error_result(compile_result["error"])
 
 	return {
 		"is_valid": true,
 		"error": {},
 		"error_message": "",
-		"commands": commands,
+		"commands": compile_result["commands"],
+		"functions": parse_result["functions"],
 	}
 
-static func _tokenize_line(source_line: String, line_number: int) -> Dictionary:
-	var tokens: Array[Dictionary] = []
-	var column: int = 0
+static func _parse_all_files(program_files: Dictionary, main_file_name: String) -> Dictionary:
+	var functions: Dictionary = {}
+	var main_commands: Array = []
+	var file_names: Array = program_files.keys()
+	file_names.sort()
 
-	while column < source_line.length():
-		var character: String = source_line.substr(column, 1)
-
-		if character == " " or character == "\t":
-			column += 1
-			continue
-
-		if character == "#":
-			break
-
-		if character == "(":
-			tokens.append(_token(TOKEN_LEFT_PAREN, character, line_number, column + 1))
-			column += 1
-			continue
-
-		if character == ")":
-			tokens.append(_token(TOKEN_RIGHT_PAREN, character, line_number, column + 1))
-			column += 1
-			continue
-
-		if character == ",":
-			tokens.append(_token(TOKEN_COMMA, character, line_number, column + 1))
-			column += 1
-			continue
-
-		if character == "\"":
-			var string_result: Dictionary = _read_string(source_line, line_number, column)
-			if not string_result["is_valid"]:
-				return _invalid_result(string_result["error"])
-			tokens.append(string_result["token"])
-			column = string_result["next_column"]
-			continue
-
-		if _is_identifier_start(character):
-			var identifier_result: Dictionary = _read_identifier(source_line, line_number, column)
-			tokens.append(identifier_result["token"])
-			column = identifier_result["next_column"]
-			continue
-
-		return _invalid_result(_error(line_number, column + 1, "Unexpected character '%s'" % character))
+	for file_name_value in file_names:
+		var file_name: String = String(file_name_value)
+		var file_result: Dictionary = _parse_file(file_name, String(program_files[file_name]), functions)
+		if not file_result["is_valid"]:
+			return file_result
+		if file_name == main_file_name:
+			main_commands = file_result["top_level_commands"] as Array
 
 	return {
 		"is_valid": true,
-		"tokens": tokens,
 		"error": {},
+		"main_commands": main_commands,
+		"functions": functions,
 	}
 
-static func _read_string(source_line: String, line_number: int, start_column: int) -> Dictionary:
-	var value: String = ""
-	var column: int = start_column + 1
+static func _parse_file(file_name: String, source_code: String, functions: Dictionary) -> Dictionary:
+	var top_level_commands: Array[Dictionary] = []
+	var current_function_name: String = ""
+	var current_function_commands: Array[Dictionary] = []
+	var current_function_line: int = 0
+	var lines: PackedStringArray = source_code.split("\n")
 
-	while column < source_line.length():
-		var character: String = source_line.substr(column, 1)
-		if character == "\"":
-			return {
-				"is_valid": true,
-				"token": _token(TOKEN_STRING, value, line_number, start_column + 1),
-				"next_column": column + 1,
-				"error": {},
+	for line_index in range(lines.size()):
+		var line_number: int = line_index + 1
+		var source_line: String = String(lines[line_index])
+		var trimmed_line: String = source_line.strip_edges()
+		if trimmed_line == "" or trimmed_line.begins_with("#"):
+			continue
+
+		if current_function_name != "" and trimmed_line == FUNCTION_END:
+			functions[current_function_name] = {
+				"name": current_function_name,
+				"file": file_name,
+				"line": current_function_line,
+				"commands": current_function_commands,
 			}
-		value += character
-		column += 1
+			current_function_name = ""
+			current_function_commands = []
+			current_function_line = 0
+			continue
+
+		var declaration_name: String = _get_function_declaration_name(trimmed_line)
+		if declaration_name != "":
+			if current_function_name != "":
+				return _invalid_result(_error(file_name, line_number, 1, "Cannot declare a function inside another function"))
+			if functions.has(declaration_name):
+				return _invalid_result(_error(file_name, line_number, 1, "Function '%s' is already declared" % declaration_name))
+			current_function_name = declaration_name
+			current_function_commands = []
+			current_function_line = line_number
+			continue
+
+		var statement_result: Dictionary = _parse_statement(trimmed_line, file_name, line_number)
+		if not statement_result["is_valid"]:
+			return statement_result
+
+		if current_function_name != "":
+			current_function_commands.append(statement_result["command"])
+		elif file_name == MAIN_FILE_NAME:
+			top_level_commands.append(statement_result["command"])
+
+	if current_function_name != "":
+		return _invalid_result(_error(file_name, current_function_line, 1, "Function '%s' is missing end" % current_function_name))
 
 	return {
-		"is_valid": false,
-		"token": {},
-		"next_column": column,
-		"error": _error(line_number, start_column + 1, "Unterminated string literal"),
+		"is_valid": true,
+		"error": {},
+		"top_level_commands": top_level_commands,
 	}
 
-static func _read_identifier(source_line: String, line_number: int, start_column: int) -> Dictionary:
-	var value: String = ""
-	var column: int = start_column
+static func _parse_statement(trimmed_line: String, file_name: String, line_number: int) -> Dictionary:
+	var builtin_result: Dictionary = _parse_builtin_command(trimmed_line, file_name, line_number)
+	if builtin_result["is_valid"] or not builtin_result["try_call"]:
+		return builtin_result
 
-	while column < source_line.length() and _is_identifier_part(source_line.substr(column, 1)):
-		value += source_line.substr(column, 1)
-		column += 1
+	return _parse_function_call(trimmed_line, file_name, line_number)
 
-	return {
-		"token": _token(TOKEN_IDENTIFIER, value, line_number, start_column + 1),
-		"next_column": column,
-	}
-
-static func _parse_command(tokens: Array[Dictionary], line_number: int) -> Dictionary:
-	if tokens.is_empty():
+static func _parse_builtin_command(trimmed_line: String, file_name: String, line_number: int) -> Dictionary:
+	var open_paren_index: int = trimmed_line.find("(")
+	var close_paren_index: int = trimmed_line.rfind(")")
+	if open_paren_index == -1 or close_paren_index != trimmed_line.length() - 1:
 		return {
-			"is_valid": true,
-			"command": {},
+			"is_valid": false,
+			"try_call": true,
 			"error": {},
 		}
 
-	var position: int = 0
-	if tokens[position]["type"] != TOKEN_IDENTIFIER:
-		return _invalid_result(_error_from_token(tokens[position], "Expected command name"))
+	var command_name: String = trimmed_line.substr(0, open_paren_index).strip_edges()
+	if command_name != COMMAND_MINE and command_name != COMMAND_SMELT:
+		return {
+			"is_valid": false,
+			"try_call": true,
+			"error": {},
+		}
 
-	var command_name: String = String(tokens[position]["value"])
-	position += 1
+	var argument_text: String = trimmed_line.substr(open_paren_index + 1, close_paren_index - open_paren_index - 1).strip_edges()
+	if not argument_text.begins_with("\"") or not argument_text.ends_with("\""):
+		return _invalid_statement_result(_error(file_name, line_number, open_paren_index + 2, "Expected string resource name"))
 
-	if position >= tokens.size() or tokens[position]["type"] != TOKEN_LEFT_PAREN:
-		return _invalid_result(_error_after_token(tokens[position - 1], "Expected '(' after command name"))
-	position += 1
-
-	if position >= tokens.size() or tokens[position]["type"] != TOKEN_STRING:
-		return _invalid_result(_error_at_position(line_number, tokens, position, "Expected string resource name"))
-
-	var resource_name: String = String(tokens[position]["value"])
-	position += 1
-
-	if position >= tokens.size() or tokens[position]["type"] != TOKEN_RIGHT_PAREN:
-		return _invalid_result(_error_at_position(line_number, tokens, position, "Expected ')' after argument"))
-	position += 1
-
-	if position < tokens.size():
-		return _invalid_result(_error_from_token(tokens[position], "Unexpected token after command"))
-
-	if not _is_supported_command(command_name):
-		return _invalid_result(_error_from_token(tokens[0], "Unknown command '%s'" % command_name))
-
+	var resource_name: String = argument_text.substr(1, argument_text.length() - 2)
 	if not _is_supported_resource(command_name, resource_name):
-		return _invalid_result(_error_from_token(tokens[2], "Unsupported resource '%s' for %s" % [resource_name, command_name]))
+		return _invalid_statement_result(_error(file_name, line_number, open_paren_index + 2, "Unsupported resource '%s' for %s" % [resource_name, command_name]))
 
 	return {
 		"is_valid": true,
+		"try_call": false,
 		"command": {
 			"name": command_name,
 			"resource": resource_name,
+			"file": file_name,
 			"line": line_number,
 		},
 		"error": {},
 	}
 
-static func _is_supported_command(command_name: String) -> bool:
-	return command_name == COMMAND_MINE or command_name == COMMAND_SMELT
+static func _parse_function_call(trimmed_line: String, file_name: String, line_number: int) -> Dictionary:
+	if not trimmed_line.ends_with("()"):
+		return _invalid_statement_result(_error(file_name, line_number, 1, "Expected command or function call"))
+
+	var function_name: String = trimmed_line.substr(0, trimmed_line.length() - 2).strip_edges()
+	if function_name == "":
+		return _invalid_statement_result(_error(file_name, line_number, 1, "Expected function name"))
+
+	return {
+		"is_valid": true,
+		"try_call": false,
+		"command": {
+			"name": COMMAND_CALL,
+			"function": function_name,
+			"file": file_name,
+			"line": line_number,
+		},
+		"error": {},
+	}
+
+static func _compile_main_commands(main_commands: Array, functions: Dictionary) -> Dictionary:
+	var compiled_commands: Array[Dictionary] = []
+	for command_value in main_commands:
+		var command: Dictionary = command_value as Dictionary
+		var expand_result: Dictionary = _expand_command(command, functions, [], 0)
+		if not expand_result["is_valid"]:
+			return expand_result
+		compiled_commands.append_array(expand_result["commands"])
+
+	return {
+		"is_valid": true,
+		"error": {},
+		"commands": compiled_commands,
+	}
+
+static func _expand_command(command: Dictionary, functions: Dictionary, call_stack: Array, call_depth: int) -> Dictionary:
+	if command["name"] != COMMAND_CALL:
+		return {
+			"is_valid": true,
+			"error": {},
+			"commands": [command],
+		}
+
+	if call_depth >= MAX_CALL_DEPTH:
+		return _invalid_result(_error(command["file"], command["line"], 1, "Function call depth limit reached"))
+
+	var function_name: String = String(command["function"])
+	if not functions.has(function_name):
+		return _invalid_result(_error(command["file"], command["line"], 1, "Unknown function '%s'" % function_name))
+	if call_stack.has(function_name):
+		return _invalid_result(_error(command["file"], command["line"], 1, "Recursive function call '%s' is not supported yet" % function_name))
+
+	var next_call_stack: Array = call_stack.duplicate()
+	next_call_stack.append(function_name)
+
+	var function_definition: Dictionary = functions[function_name] as Dictionary
+	var function_commands: Array = function_definition["commands"] as Array
+	var expanded_commands: Array[Dictionary] = []
+	for function_command_value in function_commands:
+		var function_command: Dictionary = function_command_value as Dictionary
+		var expand_result: Dictionary = _expand_command(function_command, functions, next_call_stack, call_depth + 1)
+		if not expand_result["is_valid"]:
+			return expand_result
+		expanded_commands.append_array(expand_result["commands"])
+
+	return {
+		"is_valid": true,
+		"error": {},
+		"commands": expanded_commands,
+	}
+
+static func _get_function_declaration_name(trimmed_line: String) -> String:
+	var prefix: String = ""
+	if trimmed_line.begins_with(FUNCTION_DECLARATION_PREFIX):
+		prefix = FUNCTION_DECLARATION_PREFIX
+	elif trimmed_line.begins_with(FUNCTION_DECLARATION_ALT_PREFIX):
+		prefix = FUNCTION_DECLARATION_ALT_PREFIX
+	else:
+		return ""
+
+	if not trimmed_line.ends_with("()"):
+		return ""
+	return trimmed_line.substr(prefix.length(), trimmed_line.length() - prefix.length() - 2).strip_edges()
 
 static func _is_supported_resource(command_name: String, resource_name: String) -> bool:
 	if command_name == COMMAND_MINE:
@@ -183,25 +243,17 @@ static func _is_supported_resource(command_name: String, resource_name: String) 
 		return resource_name == RESOURCE_IRON
 	return false
 
-static func _is_identifier_start(character: String) -> bool:
-	return character.to_lower() != character.to_upper() or character == "_"
-
-static func _is_identifier_part(character: String) -> bool:
-	return _is_identifier_start(character) or character.is_valid_int()
-
-static func _token(type: String, value: String, line_number: int, column_number: int) -> Dictionary:
+static func _invalid_statement_result(error: Dictionary) -> Dictionary:
 	return {
-		"type": type,
-		"value": value,
-		"line": line_number,
-		"column": column_number,
+		"is_valid": false,
+		"try_call": false,
+		"command": {},
+		"error": error,
 	}
 
 static func _invalid_result(error: Dictionary) -> Dictionary:
 	return {
 		"is_valid": false,
-		"tokens": [],
-		"command": {},
 		"error": error,
 	}
 
@@ -209,26 +261,15 @@ static func _error_result(error: Dictionary) -> Dictionary:
 	return {
 		"is_valid": false,
 		"error": error,
-		"error_message": "Line %d, column %d: %s" % [error["line"], error["column"], error["message"]],
+		"error_message": "%s line %d, column %d: %s" % [error["file"], error["line"], error["column"], error["message"]],
 		"commands": [],
+		"functions": {},
 	}
 
-static func _error(line_number: int, column_number: int, message: String) -> Dictionary:
+static func _error(file_name: String, line_number: int, column_number: int, message: String) -> Dictionary:
 	return {
+		"file": file_name,
 		"line": line_number,
 		"column": column_number,
 		"message": message,
 	}
-
-static func _error_from_token(token: Dictionary, message: String) -> Dictionary:
-	return _error(token["line"], token["column"], message)
-
-static func _error_after_token(token: Dictionary, message: String) -> Dictionary:
-	return _error(token["line"], token["column"] + String(token["value"]).length(), message)
-
-static func _error_at_position(line_number: int, tokens: Array[Dictionary], position: int, message: String) -> Dictionary:
-	if position < tokens.size():
-		return _error_from_token(tokens[position], message)
-	if not tokens.is_empty():
-		return _error_after_token(tokens[tokens.size() - 1], message)
-	return _error(line_number, 1, message)
