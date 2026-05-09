@@ -3,7 +3,8 @@ extends Node
 signal coal_changed(amount: int)
 signal program_changed(is_running: bool, error_message: String)
 
-const COAL_RESOURCE_NAME := "coal"
+const ProgramInterpreter = preload("res://scripts/interpreter/ProgramInterpreter.gd")
+const MINE_COAL_JOB := "mine:coal"
 
 var coal := 0:
 	set(value):
@@ -13,12 +14,16 @@ var coal := 0:
 		coal_changed.emit(coal)
 
 var current_source_code := ""
-var is_mining_coal := false
+var active_jobs := {}
 var program_error := ""
 var _mine_tick_elapsed := 0.0
 
+var is_mining_coal: bool:
+	get:
+		return active_jobs.has(MINE_COAL_JOB)
+
 func _process(delta: float) -> void:
-	if not is_mining_coal:
+	if not active_jobs.has(MINE_COAL_JOB):
 		_mine_tick_elapsed = 0.0
 		return
 
@@ -30,37 +35,26 @@ func _process(delta: float) -> void:
 func apply_program(source_code: String) -> void:
 	current_source_code = source_code
 
-	var parse_result := _parse_program(source_code)
-	if parse_result["error_message"] != "":
-		is_mining_coal = false
+	var parse_result := ProgramInterpreter.parse(source_code)
+	if not parse_result["is_valid"]:
+		active_jobs.clear()
 		program_error = parse_result["error_message"]
 		_mine_tick_elapsed = 0.0
 		program_changed.emit(false, program_error)
 		return
 
-	is_mining_coal = parse_result["should_mine_coal"]
+	active_jobs = _commands_to_active_jobs(parse_result["commands"])
 	program_error = ""
-	program_changed.emit(is_mining_coal, program_error)
+	program_changed.emit(not active_jobs.is_empty(), program_error)
 
-func _parse_program(source_code: String) -> Dictionary:
-	var should_mine_coal := false
-	var lines := source_code.split("\n")
+func validate_program(source_code: String) -> Dictionary:
+	return ProgramInterpreter.parse(source_code)
 
-	for index in range(lines.size()):
-		var line := lines[index].strip_edges()
-		if line == "" or line.begins_with("#"):
-			continue
+func _commands_to_active_jobs(commands: Array) -> Dictionary:
+	var next_active_jobs := {}
 
-		if line == "mine(\"%s\")" % COAL_RESOURCE_NAME:
-			should_mine_coal = true
-			continue
+	for command in commands:
+		if command["name"] == ProgramInterpreter.COMMAND_MINE and command["resource"] == ProgramInterpreter.RESOURCE_COAL:
+			next_active_jobs[MINE_COAL_JOB] = true
 
-		return {
-			"should_mine_coal": false,
-			"error_message": "Line %d: expected mine(\"coal\")" % [index + 1],
-		}
-
-	return {
-		"should_mine_coal": should_mine_coal,
-		"error_message": "",
-	}
+	return next_active_jobs
