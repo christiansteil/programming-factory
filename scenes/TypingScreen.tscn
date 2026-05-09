@@ -47,7 +47,7 @@ theme_override_font_sizes/font_size = 36
 
 [node name="Subtitle" type="Label" parent="Margin/Panel/Content"]
 layout_mode = 2
-text = "Type your first factory program below. Execution is the next milestone."
+text = "Type mine(\"coal\") to start mining coal at 1 per second. Invalid code stops the program."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -68,11 +68,19 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-placeholder_text = "# Write factory instructions here...\nmake conveyor\nmove item right"
+placeholder_text = "# Write factory instructions here...\nmine(\"coal\")"
 wrap_mode = 1
 scroll_fit_content_height = false
 minimap_draw = false
 highlight_current_line = true
+
+[node name="ErrorLabel" type="Label" parent="Margin/Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+visible = false
+autowrap_mode = 3
+theme_override_colors/font_color = Color(1, 0.278431, 0.278431, 1)
 
 [node name="Footer" type="HBoxContainer" parent="Margin/Panel/Content"]
 layout_mode = 2
@@ -85,6 +93,11 @@ size_flags_horizontal = 3
 text = "waiting for input • 1 line(s) • 0 character(s)"
 vertical_alignment = 1
 
+[node name="ResourcesButton" type="Button" parent="Margin/Panel/Content/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Resources"
+
 [node name="ClearButton" type="Button" parent="Margin/Panel/Content/Footer"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -93,4 +106,4 @@ text = "Clear"
 [node name="RunButton" type="Button" parent="Margin/Panel/Content/Footer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Run Soon"
+text = "Apply Code"
