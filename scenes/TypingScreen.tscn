@@ -1,0 +1,96 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/TypingScreen.gd" id="1_typing"]
+
+[node name="TypingScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_typing")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0352941, 0.0431373, 0.0666667, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="Panel" type="PanelContainer" parent="Margin"]
+layout_mode = 2
+
+[node name="Content" type="VBoxContainer" parent="Margin/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Margin/Panel/Content"]
+layout_mode = 2
+text = "Programming Factory"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="Subtitle" type="Label" parent="Margin/Panel/Content"]
+layout_mode = 2
+text = "Type your first factory program below. Execution is the next milestone."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="EditorFrame" type="PanelContainer" parent="Margin/Panel/Content"]
+custom_minimum_size = Vector2(0, 380)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EditorContent" type="MarginContainer" parent="Margin/Panel/Content/EditorFrame"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="CodeEditor" type="TextEdit" parent="Margin/Panel/Content/EditorFrame/EditorContent"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+placeholder_text = "# Write factory instructions here...\nmake conveyor\nmove item right"
+wrap_mode = 1
+scroll_fit_content_height = false
+minimap_draw = false
+highlight_current_line = true
+
+[node name="Footer" type="HBoxContainer" parent="Margin/Panel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StatusLabel" type="Label" parent="Margin/Panel/Content/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "waiting for input • 1 line(s) • 0 character(s)"
+vertical_alignment = 1
+
+[node name="ClearButton" type="Button" parent="Margin/Panel/Content/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Clear"
+
+[node name="RunButton" type="Button" parent="Margin/Panel/Content/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Run Soon"
