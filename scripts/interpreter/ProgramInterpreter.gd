@@ -1,29 +1,29 @@
 extends RefCounted
 
-const COMMAND_MINE := "mine"
-const RESOURCE_COAL := "coal"
+const COMMAND_MINE: String = "mine"
+const RESOURCE_COAL: String = "coal"
 
-const TOKEN_IDENTIFIER := "identifier"
-const TOKEN_STRING := "string"
-const TOKEN_LEFT_PAREN := "left_paren"
-const TOKEN_RIGHT_PAREN := "right_paren"
-const TOKEN_COMMA := "comma"
+const TOKEN_IDENTIFIER: String = "identifier"
+const TOKEN_STRING: String = "string"
+const TOKEN_LEFT_PAREN: String = "left_paren"
+const TOKEN_RIGHT_PAREN: String = "right_paren"
+const TOKEN_COMMA: String = "comma"
 
 static func parse(source_code: String) -> Dictionary:
 	var commands: Array[Dictionary] = []
-	var lines := source_code.split("\n")
+	var lines: PackedStringArray = source_code.split("\n")
 
 	for line_index in range(lines.size()):
-		var source_line := String(lines[line_index])
-		var trimmed_line := source_line.strip_edges()
+		var source_line: String = String(lines[line_index])
+		var trimmed_line: String = source_line.strip_edges()
 		if trimmed_line == "" or trimmed_line.begins_with("#"):
 			continue
 
-		var token_result := _tokenize_line(source_line, line_index + 1)
+		var token_result: Dictionary = _tokenize_line(source_line, line_index + 1)
 		if not token_result["is_valid"]:
 			return _error_result(token_result["error"])
 
-		var parse_result := _parse_command(token_result["tokens"], line_index + 1)
+		var parse_result: Dictionary = _parse_command(token_result["tokens"], line_index + 1)
 		if not parse_result["is_valid"]:
 			return _error_result(parse_result["error"])
 
@@ -38,10 +38,10 @@ static func parse(source_code: String) -> Dictionary:
 
 static func _tokenize_line(source_line: String, line_number: int) -> Dictionary:
 	var tokens: Array[Dictionary] = []
-	var column := 0
+	var column: int = 0
 
 	while column < source_line.length():
-		var character := source_line.substr(column, 1)
+		var character: String = source_line.substr(column, 1)
 
 		if character == " " or character == "\t":
 			column += 1
@@ -66,7 +66,7 @@ static func _tokenize_line(source_line: String, line_number: int) -> Dictionary:
 			continue
 
 		if character == "\"":
-			var string_result := _read_string(source_line, line_number, column)
+			var string_result: Dictionary = _read_string(source_line, line_number, column)
 			if not string_result["is_valid"]:
 				return _invalid_result(string_result["error"])
 			tokens.append(string_result["token"])
@@ -74,7 +74,7 @@ static func _tokenize_line(source_line: String, line_number: int) -> Dictionary:
 			continue
 
 		if _is_identifier_start(character):
-			var identifier_result := _read_identifier(source_line, line_number, column)
+			var identifier_result: Dictionary = _read_identifier(source_line, line_number, column)
 			tokens.append(identifier_result["token"])
 			column = identifier_result["next_column"]
 			continue
@@ -88,11 +88,11 @@ static func _tokenize_line(source_line: String, line_number: int) -> Dictionary:
 	}
 
 static func _read_string(source_line: String, line_number: int, start_column: int) -> Dictionary:
-	var value := ""
-	var column := start_column + 1
+	var value: String = ""
+	var column: int = start_column + 1
 
 	while column < source_line.length():
-		var character := source_line.substr(column, 1)
+		var character: String = source_line.substr(column, 1)
 		if character == "\"":
 			return {
 				"is_valid": true,
@@ -111,8 +111,8 @@ static func _read_string(source_line: String, line_number: int, start_column: in
 	}
 
 static func _read_identifier(source_line: String, line_number: int, start_column: int) -> Dictionary:
-	var value := ""
-	var column := start_column
+	var value: String = ""
+	var column: int = start_column
 
 	while column < source_line.length() and _is_identifier_part(source_line.substr(column, 1)):
 		value += source_line.substr(column, 1)
@@ -131,11 +131,11 @@ static func _parse_command(tokens: Array[Dictionary], line_number: int) -> Dicti
 			"error": {},
 		}
 
-	var position := 0
+	var position: int = 0
 	if tokens[position]["type"] != TOKEN_IDENTIFIER:
 		return _invalid_result(_error_from_token(tokens[position], "Expected command name"))
 
-	var command_name := String(tokens[position]["value"])
+	var command_name: String = String(tokens[position]["value"])
 	position += 1
 
 	if position >= tokens.size() or tokens[position]["type"] != TOKEN_LEFT_PAREN:
@@ -145,7 +145,7 @@ static func _parse_command(tokens: Array[Dictionary], line_number: int) -> Dicti
 	if position >= tokens.size() or tokens[position]["type"] != TOKEN_STRING:
 		return _invalid_result(_error_at_position(line_number, tokens, position, "Expected string resource name"))
 
-	var resource_name := String(tokens[position]["value"])
+	var resource_name: String = String(tokens[position]["value"])
 	position += 1
 
 	if position >= tokens.size() or tokens[position]["type"] != TOKEN_RIGHT_PAREN:

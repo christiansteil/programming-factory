@@ -42,9 +42,9 @@ func _on_run_pressed() -> void:
 	_update_status()
 
 func _update_status() -> void:
-	var character_count := code_editor.text.length()
-	var line_count := max(1, code_editor.get_line_count())
-	var run_state := _get_run_state()
+	var character_count: int = code_editor.text.length()
+	var line_count: int = max(1, code_editor.get_line_count())
+	var run_state: String = _get_run_state()
 	status_label.text = "%s • %d line(s) • %d character(s)" % [run_state, line_count, character_count]
 	error_label.text = GameState.program_error
 	error_label.visible = GameState.program_error != ""
