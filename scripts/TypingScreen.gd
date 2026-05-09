@@ -55,8 +55,12 @@ func _get_run_state() -> String:
 		return "error"
 	if GameState.is_program_running and GameState.current_source_code != GameState.running_source_code:
 		return "running applied code; edits pending"
+	if GameState.is_mining_coal and GameState.is_mining_iron:
+		return "mining coal (+1/sec) and iron (+0.5/sec)"
 	if GameState.is_mining_coal:
 		return "mining coal (+1/sec)"
+	if GameState.is_mining_iron:
+		return "mining iron (+0.5/sec)"
 	if GameState.is_program_running:
 		return "running, no active jobs"
 	if code_editor.text.strip_edges() == "":

@@ -2,6 +2,7 @@ extends RefCounted
 
 const COMMAND_MINE: String = "mine"
 const RESOURCE_COAL: String = "coal"
+const RESOURCE_IRON: String = "iron"
 
 const TOKEN_IDENTIFIER: String = "identifier"
 const TOKEN_STRING: String = "string"
@@ -158,7 +159,7 @@ static func _parse_command(tokens: Array[Dictionary], line_number: int) -> Dicti
 	if command_name != COMMAND_MINE:
 		return _invalid_result(_error_from_token(tokens[0], "Unknown command '%s'" % command_name))
 
-	if resource_name != RESOURCE_COAL:
+	if not _is_supported_resource(resource_name):
 		return _invalid_result(_error_from_token(tokens[2], "Unsupported resource '%s'" % resource_name))
 
 	return {
@@ -170,6 +171,9 @@ static func _parse_command(tokens: Array[Dictionary], line_number: int) -> Dicti
 		},
 		"error": {},
 	}
+
+static func _is_supported_resource(resource_name: String) -> bool:
+	return resource_name == RESOURCE_COAL or resource_name == RESOURCE_IRON
 
 static func _is_identifier_start(character: String) -> bool:
 	return character.to_lower() != character.to_upper() or character == "_"

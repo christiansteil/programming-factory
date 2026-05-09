@@ -46,23 +46,50 @@ text = "Factory Resources"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 36
 
-[node name="CoalCard" type="PanelContainer" parent="Margin/Panel/Content"]
+[node name="ResourceCards" type="HBoxContainer" parent="Margin/Panel/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 18
+
+[node name="CoalCard" type="PanelContainer" parent="Margin/Panel/Content/ResourceCards"]
 layout_mode = 2
 size_flags_horizontal = 4
 custom_minimum_size = Vector2(420, 180)
 
-[node name="CoalContent" type="VBoxContainer" parent="Margin/Panel/Content/CoalCard"]
+[node name="CoalContent" type="VBoxContainer" parent="Margin/Panel/Content/ResourceCards/CoalCard"]
 layout_mode = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="CoalNameLabel" type="Label" parent="Margin/Panel/Content/CoalCard/CoalContent"]
+[node name="CoalNameLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/CoalCard/CoalContent"]
 layout_mode = 2
 text = "Coal"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 28
 
-[node name="CoalAmountLabel" type="Label" parent="Margin/Panel/Content/CoalCard/CoalContent"]
+[node name="CoalAmountLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/CoalCard/CoalContent"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 52
+
+[node name="IronCard" type="PanelContainer" parent="Margin/Panel/Content/ResourceCards"]
+layout_mode = 2
+custom_minimum_size = Vector2(420, 180)
+
+[node name="IronContent" type="VBoxContainer" parent="Margin/Panel/Content/ResourceCards/IronCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="IronNameLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/IronCard/IronContent"]
+layout_mode = 2
+text = "Iron"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+
+[node name="IronAmountLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/IronCard/IronContent"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "0"

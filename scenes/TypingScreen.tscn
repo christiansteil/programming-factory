@@ -47,7 +47,7 @@ theme_override_font_sizes/font_size = 36
 
 [node name="Subtitle" type="Label" parent="Margin/Panel/Content"]
 layout_mode = 2
-text = "Type mine(\"coal\") to start mining coal at 1 per second. Invalid code stops the program."
+text = "Type mine(\"coal\") or mine(\"iron\") to start mining resources. Iron mines at 0.5 per second."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -68,7 +68,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-placeholder_text = "# Write factory instructions here...\nmine(\"coal\")"
+placeholder_text = "# Write factory instructions here...\nmine(\"coal\")\nmine(\"iron\")"
 wrap_mode = 1
 scroll_fit_content_height = false
 minimap_draw = false
