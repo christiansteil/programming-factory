@@ -47,7 +47,7 @@ theme_override_font_sizes/font_size = 36
 
 [node name="Subtitle" type="Label" parent="Margin/Panel/Content"]
 layout_mode = 2
-text = "Main loops when applied. Create files with functions like func mine coal() ... end, then call mine coal() from main."
+text = "Main loops when applied. Create files with functions like func do mine(resource): then tab-indented commands and return."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -98,7 +98,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-placeholder_text = "# main example:\nmine coal()\nsmelt iron()\n\n# another file example:\nfunc mine coal()\nmine(\"coal\")\nend"
+placeholder_text = "# main example:\ndo mine(\"coal\")\ndo smelt(\"iron\")\n\n# another file example:\nfunc do mine(resource):\n\tmine(resource)\n\treturn"
 wrap_mode = 1
 scroll_fit_content_height = false
 minimap_draw = false
