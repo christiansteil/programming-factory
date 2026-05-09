@@ -1,0 +1,125 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ResourcesScreen.gd" id="1_resources"]
+
+[node name="ResourcesScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_resources")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0352941, 0.0431373, 0.0666667, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="Panel" type="PanelContainer" parent="Margin"]
+layout_mode = 2
+
+[node name="Content" type="VBoxContainer" parent="Margin/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="Title" type="Label" parent="Margin/Panel/Content"]
+layout_mode = 2
+text = "Factory Resources"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="ResourceCards" type="HBoxContainer" parent="Margin/Panel/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 18
+
+[node name="CoalCard" type="PanelContainer" parent="Margin/Panel/Content/ResourceCards"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(420, 180)
+
+[node name="CoalContent" type="VBoxContainer" parent="Margin/Panel/Content/ResourceCards/CoalCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="CoalNameLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/CoalCard/CoalContent"]
+layout_mode = 2
+text = "Coal"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+
+[node name="CoalAmountLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/CoalCard/CoalContent"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 52
+
+[node name="IronCard" type="PanelContainer" parent="Margin/Panel/Content/ResourceCards"]
+layout_mode = 2
+custom_minimum_size = Vector2(420, 180)
+
+[node name="IronContent" type="VBoxContainer" parent="Margin/Panel/Content/ResourceCards/IronCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="IronNameLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/IronCard/IronContent"]
+layout_mode = 2
+text = "Iron"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+
+[node name="IronAmountLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/IronCard/IronContent"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 52
+
+[node name="IronPlatesCard" type="PanelContainer" parent="Margin/Panel/Content/ResourceCards"]
+layout_mode = 2
+custom_minimum_size = Vector2(420, 180)
+
+[node name="IronPlatesContent" type="VBoxContainer" parent="Margin/Panel/Content/ResourceCards/IronPlatesCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="IronPlatesNameLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/IronPlatesCard/IronPlatesContent"]
+layout_mode = 2
+text = "Iron Plates"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+
+[node name="IronPlatesAmountLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/IronPlatesCard/IronPlatesContent"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 52
+
+[node name="BackButton" type="Button" parent="Margin/Panel/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Back to Editor"
