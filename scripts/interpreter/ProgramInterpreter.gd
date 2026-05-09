@@ -1,6 +1,7 @@
 extends RefCounted
 
 const COMMAND_MINE: String = "mine"
+const COMMAND_SMELT: String = "smelt"
 const RESOURCE_COAL: String = "coal"
 const RESOURCE_IRON: String = "iron"
 
@@ -156,11 +157,11 @@ static func _parse_command(tokens: Array[Dictionary], line_number: int) -> Dicti
 	if position < tokens.size():
 		return _invalid_result(_error_from_token(tokens[position], "Unexpected token after command"))
 
-	if command_name != COMMAND_MINE:
+	if not _is_supported_command(command_name):
 		return _invalid_result(_error_from_token(tokens[0], "Unknown command '%s'" % command_name))
 
-	if not _is_supported_resource(resource_name):
-		return _invalid_result(_error_from_token(tokens[2], "Unsupported resource '%s'" % resource_name))
+	if not _is_supported_resource(command_name, resource_name):
+		return _invalid_result(_error_from_token(tokens[2], "Unsupported resource '%s' for %s" % [resource_name, command_name]))
 
 	return {
 		"is_valid": true,
@@ -172,8 +173,15 @@ static func _parse_command(tokens: Array[Dictionary], line_number: int) -> Dicti
 		"error": {},
 	}
 
-static func _is_supported_resource(resource_name: String) -> bool:
-	return resource_name == RESOURCE_COAL or resource_name == RESOURCE_IRON
+static func _is_supported_command(command_name: String) -> bool:
+	return command_name == COMMAND_MINE or command_name == COMMAND_SMELT
+
+static func _is_supported_resource(command_name: String, resource_name: String) -> bool:
+	if command_name == COMMAND_MINE:
+		return resource_name == RESOURCE_COAL or resource_name == RESOURCE_IRON
+	if command_name == COMMAND_SMELT:
+		return resource_name == RESOURCE_IRON
+	return false
 
 static func _is_identifier_start(character: String) -> bool:
 	return character.to_lower() != character.to_upper() or character == "_"

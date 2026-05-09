@@ -47,7 +47,7 @@ theme_override_font_sizes/font_size = 36
 
 [node name="Subtitle" type="Label" parent="Margin/Panel/Content"]
 layout_mode = 2
-text = "Type mine(\"coal\") or mine(\"iron\") to start mining resources. Iron mines at 0.5 per second."
+text = "Type mine(\"coal\"), mine(\"iron\"), or smelt(\"iron\"). Each line runs one tick at a time."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -68,7 +68,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-placeholder_text = "# Write factory instructions here...\nmine(\"coal\")\nmine(\"iron\")"
+placeholder_text = "# Write factory instructions here...\nmine(\"coal\")\nmine(\"coal\")\nmine(\"iron\")\nsmelt(\"iron\")"
 wrap_mode = 1
 scroll_fit_content_height = false
 minimap_draw = false

@@ -50,19 +50,25 @@ func _update_status() -> void:
 	error_label.visible = GameState.program_error != ""
 	run_button.text = "Stop Code" if GameState.is_program_running else "Apply Code"
 
+func _get_running_program_state() -> String:
+	var actions: PackedStringArray = PackedStringArray()
+	if GameState.is_mining_coal:
+		actions.append("mine coal")
+	if GameState.is_mining_iron:
+		actions.append("mine iron")
+	if GameState.is_smelting_iron:
+		actions.append("smelt iron")
+	if actions.is_empty():
+		return "running, no commands"
+	return "running tick loop: %s" % ", ".join(actions)
+
 func _get_run_state() -> String:
 	if GameState.program_error != "":
 		return "error"
 	if GameState.is_program_running and GameState.current_source_code != GameState.running_source_code:
 		return "running applied code; edits pending"
-	if GameState.is_mining_coal and GameState.is_mining_iron:
-		return "mining coal (+1/sec) and iron (+0.5/sec)"
-	if GameState.is_mining_coal:
-		return "mining coal (+1/sec)"
-	if GameState.is_mining_iron:
-		return "mining iron (+0.5/sec)"
 	if GameState.is_program_running:
-		return "running, no active jobs"
+		return _get_running_program_state()
 	if code_editor.text.strip_edges() == "":
 		return "waiting for input"
 	return "ready to apply"

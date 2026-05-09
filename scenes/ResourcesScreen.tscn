@@ -96,6 +96,28 @@ text = "0"
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 52
 
+[node name="IronPlatesCard" type="PanelContainer" parent="Margin/Panel/Content/ResourceCards"]
+layout_mode = 2
+custom_minimum_size = Vector2(420, 180)
+
+[node name="IronPlatesContent" type="VBoxContainer" parent="Margin/Panel/Content/ResourceCards/IronPlatesCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="IronPlatesNameLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/IronPlatesCard/IronPlatesContent"]
+layout_mode = 2
+text = "Iron Plates"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+
+[node name="IronPlatesAmountLabel" type="Label" parent="Margin/Panel/Content/ResourceCards/IronPlatesCard/IronPlatesContent"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 52
+
 [node name="BackButton" type="Button" parent="Margin/Panel/Content"]
 unique_name_in_owner = true
 layout_mode = 2
