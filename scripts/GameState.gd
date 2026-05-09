@@ -14,8 +14,10 @@ var coal := 0:
 		coal_changed.emit(coal)
 
 var current_source_code := ""
+var running_source_code := ""
 var active_jobs := {}
 var program_error := ""
+var is_program_running := false
 var _mine_tick_elapsed := 0.0
 
 var is_mining_coal: bool:
@@ -32,20 +34,32 @@ func _process(delta: float) -> void:
 		_mine_tick_elapsed -= 1.0
 		coal += 1
 
+func set_current_source_code(source_code: String) -> void:
+	current_source_code = source_code
+	if not is_program_running and program_error != "":
+		program_error = ""
+		program_changed.emit(false, program_error)
+
 func apply_program(source_code: String) -> void:
 	current_source_code = source_code
 
 	var parse_result := ProgramInterpreter.parse(source_code)
 	if not parse_result["is_valid"]:
-		active_jobs.clear()
+		_stop_active_jobs()
 		program_error = parse_result["error_message"]
-		_mine_tick_elapsed = 0.0
 		program_changed.emit(false, program_error)
 		return
 
+	running_source_code = source_code
 	active_jobs = _commands_to_active_jobs(parse_result["commands"])
 	program_error = ""
-	program_changed.emit(not active_jobs.is_empty(), program_error)
+	is_program_running = true
+	program_changed.emit(true, program_error)
+
+func stop_program() -> void:
+	_stop_active_jobs()
+	program_error = ""
+	program_changed.emit(false, program_error)
 
 func validate_program(source_code: String) -> Dictionary:
 	return ProgramInterpreter.parse(source_code)
@@ -58,3 +72,9 @@ func _commands_to_active_jobs(commands: Array) -> Dictionary:
 			next_active_jobs[MINE_COAL_JOB] = true
 
 	return next_active_jobs
+
+func _stop_active_jobs() -> void:
+	active_jobs.clear()
+	running_source_code = ""
+	is_program_running = false
+	_mine_tick_elapsed = 0.0
